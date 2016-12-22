@@ -10,10 +10,45 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.paris8.pro.graphiquegopigo.MainActivity">
 
+    <Button
+        android:text="Dessiner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/bouton_dessine"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/bouton_efface" />
+
+    <Button
+        android:text="Effacer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/bouton_efface"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
+
     <com.jjoe64.graphview.GraphView
-        android:layout_height="match_parent"
         android:layout_width="match_parent"
         android:id="@+id/graph"
-        />
+        android:layout_height="870px"
+        android:layout_below="@+id/bouton_dessine"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="Pause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/bouton_pause"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/bouton_dessine" />
+
+    <!--<ToggleButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/bouton_pause"
+        android:textOff="Pause"
+        android:textOn="Continue"
+        android:layout_below="@+id/bouton_efface"
+        android:layout_alignParentEnd="true"
+        android:checked="false" />-->
 
 </RelativeLayout>

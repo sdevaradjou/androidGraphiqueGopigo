@@ -1,8 +1,11 @@
 package com.paris8.pro.graphiquegopigo;
 
 import android.graphics.Color;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
@@ -10,23 +13,125 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.util.Random;
-import java.util.concurrent.RunnableFuture;
 
 public class MainActivity extends AppCompatActivity {
 
-    private LineGraphSeries<DataPoint> series;
+    private final Handler mHandler = new Handler();
+    private Runnable mTimer1,mTimer2;
+
+    private LineGraphSeries<DataPoint> seriesA;
+    private LineGraphSeries<DataPoint> seriesB;
     private static final Random RANDOM = new Random();
-    private int lastX = 0;
-    double x,y;
+    GraphView graph;
+    Thread nouveauThread;
+    Button dessine, efface, pause;
+    boolean stop = false;
+    double a,b;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+        graph = (GraphView) findViewById(R.id.graph);
+        dessine = (Button) findViewById(R.id.bouton_dessine);
+        efface = (Button) findViewById(R.id.bouton_efface);
+        pause = (Button) findViewById(R.id.bouton_pause);
 
-        x = 0.0;
+        construireGraph();
 
-        GraphView graph = (GraphView) findViewById(R.id.graph);
+        dessine.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dessinerGraph();
+            }
+        });
+
+        pause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pauseGraph();
+            }
+        });
+
+        efface.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                effacerGraph();
+            }
+        });
+    }
+
+    @Override
+    protected void onPause() {
+        mHandler.removeCallbacks(mTimer1);
+        mHandler.removeCallbacks(mTimer2);
+        super.onPause();
+    }
+
+    private void dessinerGraph() {
+        /*if (!nouveauThread.isAlive() || seriesA.isEmpty()) {
+            nouveauThread.start();
+        }*/
+        //mHandler.postDelayed(mTimer1,100);
+        mTimer1.run();
+    }
+
+    private void pauseGraph() {
+        //if(nouveauThread.isAlive()||!nouveauThread.isInterrupted()) {
+            if(stop) {
+                //mHandler.postDelayed(mTimer2, 200);
+                mTimer2.run();
+                stop = false;
+            }
+            else{
+                try {
+                    mTimer2.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                stop=true;
+            }
+
+        //}
+    }
+
+    private void effacerGraph() {
+        if (!seriesA.isEmpty()||!seriesB.isEmpty()) {
+            graph.removeAllSeries();
+        }
+    }
+
+    private void genDonnees() {
+        //if(stop) {
+        double x,y;
+        for(int i=0;i<50;i++) {
+            y = RANDOM.nextDouble() * 5;
+            seriesA.appendData(new DataPoint(a++, y), false, 50);
+        }
+        //}
+        /*else{
+            y = 0;
+            seriesA.appendData(new DataPoint(x++,y), false, 0);
+        }*/
+    }
+
+    private DataPoint[] genDonneesVide() {
+        double x,y;
+        DataPoint[] values = new DataPoint[50];
+        for (int i=0;i<50;i++) {
+            x = i;
+            y = RANDOM.nextDouble() * 0;
+            DataPoint v = new DataPoint(x,y);
+            values[i] = v;
+        }
+        return values;
+    }
+
+
+    private void construireGraph() {
+        a=0;
+
         graph.setTitle("Distance de l'obstacle");
         graph.setTitleTextSize(80);
         graph.setTitleColor(Color.BLUE);
@@ -35,33 +140,71 @@ public class MainActivity extends AppCompatActivity {
 
         Viewport viewport = graph.getViewport();
         viewport.setYAxisBoundsManual(true);
-        //viewport.setMinY(-3);
         viewport.setMaxY(10);
-
         viewport.setXAxisBoundsManual(true);
         viewport.setMinX(0);
-        viewport.setMaxX(100);
+        viewport.setMaxX(50);
+        viewport.setScrollable(false);
 
-        viewport.setScrollable(true);
+        seriesA = new LineGraphSeries<>();
+        seriesB = new LineGraphSeries<>();
+        seriesA.setColor(Color.GREEN);
+        seriesB.setColor(Color.CYAN);
 
-        series = new LineGraphSeries<DataPoint>();
-        series.setColor(Color.MAGENTA);
-
-        graph.addSeries(series);
-    }
-
-    private void entreeAleat(){
-        y = RANDOM.nextDouble() * 5;
-        series.appendData(new DataPoint(x++,y),false, 100);
+        graph.addSeries(seriesA);
+        graph.addSeries(seriesB);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        new Thread(new Runnable() {
+
+        mTimer1 = new Runnable() {
             @Override
             public void run() {
-                for(int i=0;i<=100;i++){
+                for(int i=0;i<50;i++){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            b = RANDOM.nextDouble() * 5;
+                            seriesA.appendData(new DataPoint(a++, b), false, 50);
+                        }
+                    });
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+
+        mTimer2 = new Runnable() {
+            @Override
+            public void run() {
+                for(int i=0;i<50;i++){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            seriesA.resetData(genDonneesVide());
+                        }
+                    });
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+        };
+
+
+        /*nouveauThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i <= 50; i++) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -75,11 +218,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-        }).start();
-    }
+        });*/
 
-    @Override
-    protected void onPause() {
-        super.onPause();
     }
 }
+
