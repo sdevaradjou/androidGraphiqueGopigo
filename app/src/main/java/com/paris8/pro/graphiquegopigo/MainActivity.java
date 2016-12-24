@@ -16,17 +16,14 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final Handler mHandler = new Handler();
-    private Runnable mTimer1,mTimer2;
-
     private LineGraphSeries<DataPoint> seriesA;
     private LineGraphSeries<DataPoint> seriesB;
     private static final Random RANDOM = new Random();
     GraphView graph;
-    Thread nouveauThread;
+    Thread nouveauThreadA, nouveauThreadB;
     Button dessine, efface, pause;
     boolean stop = false;
-    double a,b;
+    double a, b;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,65 +61,61 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        mHandler.removeCallbacks(mTimer1);
-        mHandler.removeCallbacks(mTimer2);
         super.onPause();
     }
 
     private void dessinerGraph() {
-        /*if (!nouveauThread.isAlive() || seriesA.isEmpty()) {
-            nouveauThread.start();
-        }*/
-        //mHandler.postDelayed(mTimer1,100);
-        mTimer1.run();
+        if (!nouveauThreadA.isAlive() || seriesA.isEmpty()) {
+            nouveauThreadA.start();
+        }
     }
 
     private void pauseGraph() {
-        //if(nouveauThread.isAlive()||!nouveauThread.isInterrupted()) {
-            if(stop) {
-                //mHandler.postDelayed(mTimer2, 200);
-                mTimer2.run();
-                stop = false;
+        /*if (stop) {
+            nouveauThreadA.interrupt();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-            else{
-                try {
-                    mTimer2.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                stop=true;
+            nouveauThreadB.run();
+            stop = false;
+        } else {
+            nouveauThreadB.interrupt();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-
-        //}
+            nouveauThreadA.run();
+            stop = true;
+        }*/
+        if (!nouveauThreadB.isAlive() || !seriesA.isEmpty()) {
+            nouveauThreadB.start();
+        }
     }
 
     private void effacerGraph() {
-        if (!seriesA.isEmpty()||!seriesB.isEmpty()) {
+        if (!seriesA.isEmpty() || !seriesB.isEmpty()) {
             graph.removeAllSeries();
         }
     }
 
     private void genDonnees() {
-        //if(stop) {
-        double x,y;
-        for(int i=0;i<50;i++) {
+        double x, y;
+        for (int i = 0; i < 50; i++) {
             y = RANDOM.nextDouble() * 5;
             seriesA.appendData(new DataPoint(a++, y), false, 50);
         }
-        //}
-        /*else{
-            y = 0;
-            seriesA.appendData(new DataPoint(x++,y), false, 0);
-        }*/
     }
 
     private DataPoint[] genDonneesVide() {
-        double x,y;
+        double x, y;
         DataPoint[] values = new DataPoint[50];
-        for (int i=0;i<50;i++) {
+        for (int i = 0; i < 50; i++) {
             x = i;
             y = RANDOM.nextDouble() * 0;
-            DataPoint v = new DataPoint(x,y);
+            DataPoint v = new DataPoint(x, y);
             values[i] = v;
         }
         return values;
@@ -130,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void construireGraph() {
-        a=0;
+        a = 0;
 
         graph.setTitle("Distance de l'obstacle");
         graph.setTitleTextSize(80);
@@ -145,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
         viewport.setMinX(0);
         viewport.setMaxX(50);
         viewport.setScrollable(false);
+        viewport.setScalable(true);
 
         seriesA = new LineGraphSeries<>();
         seriesB = new LineGraphSeries<>();
@@ -159,10 +153,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        mTimer1 = new Runnable() {
+        nouveauThreadA = new Thread(new Runnable() {
             @Override
             public void run() {
-                for(int i=0;i<50;i++){
+                for (int i = 0; i < 50; i++) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -177,38 +171,17 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-        };
+        });
 
-
-        mTimer2 = new Runnable() {
+        nouveauThreadB = new Thread(new Runnable() {
             @Override
             public void run() {
-                for(int i=0;i<50;i++){
+                for (int i = 0; i < 50; i++) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             seriesA.resetData(genDonneesVide());
-                        }
-                    });
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-            }
-        };
-
-
-        /*nouveauThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i <= 50; i++) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            entreeAleat();
+                            //seriesB.resetData(genDonneesVide());
                         }
                     });
                     try {
@@ -218,8 +191,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-        });*/
-
+        });
     }
 }
 
