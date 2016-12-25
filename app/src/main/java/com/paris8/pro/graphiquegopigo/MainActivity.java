@@ -17,12 +17,10 @@ import java.util.Random;
 public class MainActivity extends AppCompatActivity {
 
     private LineGraphSeries<DataPoint> seriesA;
-    private LineGraphSeries<DataPoint> seriesB;
     private static final Random RANDOM = new Random();
     GraphView graph;
-    Thread nouveauThreadA, nouveauThreadB;
-    Button dessine, efface, pause;
-    boolean stop = false;
+    Thread nouveauThreadA;
+    Button dessine, efface;
     double a, b;
 
     @Override
@@ -33,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
         graph = (GraphView) findViewById(R.id.graph);
         dessine = (Button) findViewById(R.id.bouton_dessine);
         efface = (Button) findViewById(R.id.bouton_efface);
-        pause = (Button) findViewById(R.id.bouton_pause);
 
         construireGraph();
 
@@ -41,13 +38,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 dessinerGraph();
-            }
-        });
-
-        pause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                pauseGraph();
             }
         });
 
@@ -65,48 +55,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dessinerGraph() {
-        if (!nouveauThreadA.isAlive() || seriesA.isEmpty()) {
+        if (!nouveauThreadA.isAlive() && seriesA.isEmpty()) {
             nouveauThreadA.start();
         }
     }
 
-    private void pauseGraph() {
-        /*if (stop) {
-            nouveauThreadA.interrupt();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            nouveauThreadB.run();
-            stop = false;
-        } else {
-            nouveauThreadB.interrupt();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            nouveauThreadA.run();
-            stop = true;
-        }*/
-        if (!nouveauThreadB.isAlive() || !seriesA.isEmpty()) {
-            nouveauThreadB.start();
-        }
-    }
-
     private void effacerGraph() {
-        if (!seriesA.isEmpty() || !seriesB.isEmpty()) {
+        if (!seriesA.isEmpty()) {
+            seriesA.resetData(genDonneesVide());
             graph.removeAllSeries();
         }
     }
 
     private void genDonnees() {
-        double x, y;
-        for (int i = 0; i < 50; i++) {
-            y = RANDOM.nextDouble() * 5;
-            seriesA.appendData(new DataPoint(a++, y), false, 50);
-        }
+        b = RANDOM.nextDouble() * 5;
+        seriesA.appendData(new DataPoint(a++, b), false, 50);
     }
 
     private DataPoint[] genDonneesVide() {
@@ -126,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         a = 0;
 
         graph.setTitle("Distance de l'obstacle");
-        graph.setTitleTextSize(80);
+        graph.setTitleTextSize(90);
         graph.setTitleColor(Color.BLUE);
         graph.getGridLabelRenderer().setHorizontalAxisTitle("temps");
         graph.getGridLabelRenderer().setVerticalAxisTitle("distance");
@@ -141,12 +104,9 @@ public class MainActivity extends AppCompatActivity {
         viewport.setScalable(true);
 
         seriesA = new LineGraphSeries<>();
-        seriesB = new LineGraphSeries<>();
-        seriesA.setColor(Color.GREEN);
-        seriesB.setColor(Color.CYAN);
+        seriesA.setColor(Color.RED);
 
         graph.addSeries(seriesA);
-        graph.addSeries(seriesB);
     }
 
     @Override
@@ -160,28 +120,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            b = RANDOM.nextDouble() * 5;
-                            seriesA.appendData(new DataPoint(a++, b), false, 50);
-                        }
-                    });
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        nouveauThreadB = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < 50; i++) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            seriesA.resetData(genDonneesVide());
-                            //seriesB.resetData(genDonneesVide());
+                            genDonnees();
                         }
                     });
                     try {
